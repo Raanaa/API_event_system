@@ -1,4 +1,6 @@
 class Api::V1::RoomsController < ApplicationController
+  before_action :set_user
+
   def index
     @allrooms = Room.all 
     render json: @allrooms, status: :ok
@@ -7,10 +9,15 @@ class Api::V1::RoomsController < ApplicationController
   def create
     available_dates_arr = JSON.parse(params[:available_dates].gsub("'", '"')) # Convert string to array
     available_dates_range = (available_dates_arr.first..available_dates_arr.last).to_a
-    @room = Room.create(
+
+    room = @user.rooms.new(
         available_dates: available_dates_range
       )
-    render json: @room
+    if room.save!
+      render json: { status: 'success', message: 'Room created successfully', room: room}
+    else
+      render json: { status: 'error', message: 'Failed to create room' }, status: :unprocessable_entity
+    end
   end 
 
   def check_availability
@@ -35,4 +42,9 @@ class Api::V1::RoomsController < ApplicationController
   def room_params
     params.permit(:available_dates, :start_date, :end_date)
   end
+
+  def set_user
+    @user = User.find(params[:user_id])
+  end
+
 end

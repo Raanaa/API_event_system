@@ -1,6 +1,7 @@
 class Room < ApplicationRecord
   serialize :available_dates, Array
   has_many :bookings
+  belongs_to :user
 
   def available_on?(start_date, end_date)
       # Parse input dates

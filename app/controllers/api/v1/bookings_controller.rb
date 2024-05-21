@@ -1,5 +1,5 @@
 class Api::V1::BookingsController < ApplicationController
-  before_action :set_room, only: [:create, :destroy]
+  before_action :set_room, :set_user, only: [:create, :destroy]
   before_action :set_booking, only: [:destroy]
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
@@ -16,10 +16,10 @@ class Api::V1::BookingsController < ApplicationController
     end
 
     if @room.available_on?(start_date, end_date)
-      booking = Booking.create!(booking_dates: date_strings, room_id: params[:room_id], user_id: params[:user_id])
-      if booking
+      booking = @user.bookings.new(booking_dates: date_strings, room_id: params[:room_id])
+      if booking.save
         @room.update_available_dates_after_booking (date_strings)
-        render json: { status: 'success', message: 'Room booked successfully', booking_id: booking.id }
+        render json: { status: 'success', message: 'Room booked successfully', booking: booking}
       else
         render json: { status: 'error', message: 'Failed to book room' }, status: :unprocessable_entity
       end
@@ -31,7 +31,6 @@ class Api::V1::BookingsController < ApplicationController
 
   def destroy
     @room.update_available_dates_after_cancellation (@booking.booking_dates)
-  
     if @booking.destroy
       render json: { status: 'success', message: 'Booking cancelled successfully' }
     else
@@ -42,7 +41,11 @@ class Api::V1::BookingsController < ApplicationController
   private
 
   def booking_params
-    params.permit(:booking_dates, :user_id)
+    params.permit(:booking_dates)
+  end
+
+  def set_user
+    @user = User.find(params[:user_id])
   end
 
   def set_room
