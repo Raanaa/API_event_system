@@ -9,6 +9,14 @@ class Api::V1::UsersController < ApplicationController
     end
   end
 
+  def reservations
+    user = User.find(params[:id])
+    reservations = user.reservations_data
+    render json:{
+      reservation_details: reservations
+    }
+  end
+
   private
 
   def user_params

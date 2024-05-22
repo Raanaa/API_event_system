@@ -21,18 +21,17 @@ class User < ApplicationRecord
   end
 
   def reservations_data
-    reservations = bookings.map do |booking|
-      {
-        room_number: booking.room.room_number, # Assuming there's a room_number attribute in the Room model
-        start_date: booking.booking_dates.first,
-        end_date: booking.booking_dates.last,
-        nights_count: (booking.booking_dates.last - booking.booking_dates.first).to_i + 1
-      }
-    end
-
     {
-      username: username,
-      reservation_details: reservations
+      username: self.username,
+      reservations_details:
+        self.bookings.map do |booking|
+          {
+            id: booking.id,
+            room_number: booking.room_id, # Assuming there's a room_number attribute in the Room model
+            booking_dates: booking.booking_dates,
+            nights_count: (Date.parse(booking.booking_dates.first) - Date.parse(booking.booking_dates.last)).to_i + 1
+          }
+        end
     }
   end
 end
